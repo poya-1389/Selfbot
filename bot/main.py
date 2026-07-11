@@ -1,15 +1,19 @@
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+import sys
+import os
 import logging
 import asyncio
-import os
+
+# اضافه کردن مسیر ریشه به PATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from config import Config
 from database.create_tables import create_tables
 from bot.handlers import (
     start_command, handle_user_info, panel_command,
     button_callback
 )
-from aiohttp import web  # <-- اضافه کن
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # تنظیم لاگ
 logging.basicConfig(
@@ -18,63 +22,57 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-async def health_check(request):
-    """Endpoint برای Healthcheck"""
-    return web.Response(text="OK", status=200)
-
-async def start_web_server():
-    """راه‌اندازی وب سرور برای Healthcheck"""
-    app = web.Application()
-    app.router.add_get('/health', health_check)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', 8080)
-    await site.start()
-    logger.info("✅ Web server started on port 8080")
-    return runner
-
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """مدیریت خطاها"""
-    logger.error(f"خطا: {context.error}")
-    if update and update.effective_message:
-        await update.effective_message.reply_text(
-            "❌ خطایی رخ داد! لطفاً دوباره تلاش کنید."
-        )
+    logger.error(f"❌ Error: {context.error}")
 
 async def main_async():
-    """تابع اصلی async"""
+    logger.info("🚀 Starting SelfBot...")
+    
+    # بررسی وجود توکن
+    if not Config.BOT_TOKEN:
+        logger.error("❌ BOT_TOKEN is not set!")
+        return
+    
     # ساخت دیتابیس
-    create_tables()
+    try:
+        create_tables()
+        logger.info("✅ Database created")
+    except Exception as e:
+        logger.error(f"❌ Database error: {e}")
     
-    # استارت وب سرور
-    await start_web_server()
-    
-    # ساخت اپلیکیشن ربات
-    application = Application.builder().token(Config.BOT_TOKEN).build()
-    
-    # اضافه کردن هندلرها
-    application.add_handler(CommandHandler("start", start_command))
-    application.add_handler(CommandHandler("panel", panel_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_info))
-    application.add_handler(CallbackQueryHandler(button_callback))
-    application.add_error_handler(error_handler)
-    
-    # استارت ربات
-    logger.info("🚀 ربات شروع به کار کرد...")
-    await application.initialize()
-    await application.start()
-    await application.updater.start_polling()
-    
-    # نگه داشتن برنامه
-    while True:
-        await asyncio.sleep(3600)
+    # ساخت اپلیکیشن
+    try:
+        application = Application.builder().token(Config.BOT_TOKEN).build()
+        
+        application.add_handler(CommandHandler("start", start_command))
+        application.add_handler(CommandHandler("panel", panel_command))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_info))
+        application.add_handler(CallbackQueryHandler(button_callback))
+        application.add_error_handler(error_handler)
+        
+        logger.info("✅ Bot handlers registered")
+        
+        await application.initialize()
+        await application.start()
+        await application.updater.start_polling()
+        
+        logger.info("✅ Bot is running successfully!")
+        
+        while True:
+            await asyncio.sleep(60)
+            
+    except Exception as e:
+        logger.error(f"❌ Bot error: {e}")
+        raise
 
 def main():
-    """تابع اصلی"""
     try:
         asyncio.run(main_async())
     except KeyboardInterrupt:
-        logger.info("⏹ ربات متوقف شد")
+        logger.info("⏹ Bot stopped")
+    except Exception as e:
+        logger.error(f"❌ Fatal error: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
