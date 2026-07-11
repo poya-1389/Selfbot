@@ -15,11 +15,15 @@ dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def start(message: Message):
-    await message.answer(
-        "سلام \n"
-        "به نوا سلف خوش آمدید."
+
+    await create_user(
+        message.from_user.id
     )
 
+    await message.answer(
+        "سلام \n"
+        "به ربات نوا سلف خوش آمدید ثبت نام اولیه انجام شد."
+    )
 
 async def main():
     await dp.start_polling(bot)
