@@ -3,7 +3,6 @@ import os
 import logging
 import asyncio
 
-# اضافه کردن مسیر ریشه به PATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import Config
@@ -15,7 +14,6 @@ from bot.handlers import (
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
-# تنظیم لاگ
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -28,19 +26,16 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def main_async():
     logger.info("🚀 Starting SelfBot...")
     
-    # بررسی وجود توکن
     if not Config.BOT_TOKEN:
         logger.error("❌ BOT_TOKEN is not set!")
         return
     
-    # ساخت دیتابیس
     try:
         create_tables()
         logger.info("✅ Database created")
     except Exception as e:
         logger.error(f"❌ Database error: {e}")
     
-    # ساخت اپلیکیشن
     try:
         application = Application.builder().token(Config.BOT_TOKEN).build()
         
@@ -51,6 +46,10 @@ async def main_async():
         application.add_error_handler(error_handler)
         
         logger.info("✅ Bot handlers registered")
+        
+        # حذف Webhook قبل از استارت Polling
+        await application.bot.delete_webhook(drop_pending_updates=True)
+        logger.info("✅ Webhook deleted")
         
         await application.initialize()
         await application.start()
