@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 
+# بارگذاری فایل .env
 load_dotenv()
 
 class Config:
