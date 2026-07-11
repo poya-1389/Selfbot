@@ -1,9 +1,7 @@
-from loguru import logger
+import asyncio
 
-
-def main():
-    logger.info("SelfBot is running")
+from bot.main import main
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
