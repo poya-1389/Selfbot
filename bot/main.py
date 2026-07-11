@@ -9,6 +9,7 @@ from bot.handlers import (
     start_command, handle_user_info, panel_command,
     button_callback
 )
+from aiohttp import web  # <-- اضافه کن
 
 # تنظیم لاگ
 logging.basicConfig(
@@ -16,6 +17,21 @@ logging.basicConfig(
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+async def health_check(request):
+    """Endpoint برای Healthcheck"""
+    return web.Response(text="OK", status=200)
+
+async def start_web_server():
+    """راه‌اندازی وب سرور برای Healthcheck"""
+    app = web.Application()
+    app.router.add_get('/health', health_check)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', 8080)
+    await site.start()
+    logger.info("✅ Web server started on port 8080")
+    return runner
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """مدیریت خطاها"""
@@ -25,12 +41,15 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "❌ خطایی رخ داد! لطفاً دوباره تلاش کنید."
         )
 
-def main():
-    """تابع اصلی"""
+async def main_async():
+    """تابع اصلی async"""
     # ساخت دیتابیس
     create_tables()
     
-    # ساخت اپلیکیشن
+    # استارت وب سرور
+    await start_web_server()
+    
+    # ساخت اپلیکیشن ربات
     application = Application.builder().token(Config.BOT_TOKEN).build()
     
     # اضافه کردن هندلرها
@@ -42,7 +61,20 @@ def main():
     
     # استارت ربات
     logger.info("🚀 ربات شروع به کار کرد...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()
+    
+    # نگه داشتن برنامه
+    while True:
+        await asyncio.sleep(3600)
+
+def main():
+    """تابع اصلی"""
+    try:
+        asyncio.run(main_async())
+    except KeyboardInterrupt:
+        logger.info("⏹ ربات متوقف شد")
 
 if __name__ == "__main__":
     main()
