@@ -3,6 +3,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from aiogram.filters import Command
+from database.crud import create_user
 
 from config import BOT_TOKEN
 
