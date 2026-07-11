@@ -1,10 +1,25 @@
-# Telegram SelfBot Project
+# 🤖 Telegram SelfBot - مدیریت خودکار پروفایل
 
-A multi-user Telegram SelfBot platform.
+یک ربات تلگرامی برای مدیریت خودکار پروفایل کاربران با قابلیت نمایش زمان و فونت‌های مختلف.
 
-Features:
-- Userbot system
-- Admin panel
-- Time bio
-- Time name
-- Font system
+## ✨ قابلیت‌ها
+
+- 🕐 نمایش خودکار زمان تهران در بیو و نام
+- 🎨 انتخاب فونت‌های مختلف
+- 👥 پشتیبانی از چند کاربر
+- 🎛 پنل مدیریت شیشه‌ای
+- ✅ سیستم تایید ادمین
+- 🚀 اجرا روی Railway
+
+## 📋 پیش‌نیازها
+
+- Python 3.9+
+- اکانت تلگرام با API ID و API Hash
+- توکن ربات تلگرام
+
+## 🚀 نصب و اجرا
+
+### ۱. کلون کردن مخزن
+```bash
+git clone https://github.com/poya-1389/Selfbot.git
+cd Selfbot
